@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "contract-risk-analyzer"
+version = "1.0.0"
+description = "Multi-agent contract risk analysis system powered by LangGraph + GPT-4o"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+dependencies = [
+    # Core orchestration
+    "langgraph>=0.2.0",
+    "langgraph-checkpoint-aws>=0.0.1",
+    # LangChain (integrations only, NOT orchestrator)
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-aws>=0.2.0",
+    # API
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",
+    # AWS SDK
+    "boto3>=1.34.0",
+    # PDF extraction
+    "PyMuPDF>=1.24.0",
+    # Data validation
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    # Observability
+    "structlog>=24.0.0",
+    # Async helpers
+    "nest-asyncio>=1.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
+    "httpx>=0.27.0",          # for FastAPI test client
+    "moto[s3,dynamodb]>=5.0.0",  # AWS service mocks
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--tb=short -v"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A"]
+ignore = ["A003", "B008"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
