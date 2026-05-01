@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_PROVIDER=openai
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=gpt-4o
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_BUCKET_NAME=contract-analyzer-docs
+      - DYNAMODB_TABLE_NAME=contract-analyzer-runs
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_PROJECT=contract-risk-analyzer
+      - LOG_LEVEL=INFO
+      - CONFIDENCE_THRESHOLD=0.75
+    depends_on:
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  localstack:
+    image: localstack/localstack:3.4
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,dynamodb
+      - DEBUG=0
+      - PERSISTENCE=1
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./infrastructure/localstack-init:/etc/localstack/init/ready.d
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  localstack_data:
